@@ -1,0 +1,13 @@
+Category,Anticipatory Surges,Reactive Drops,Recovery Patterns,Resilience
+Air Transportation,Yes (evacuation flights),"Severe (airport closures, -90%)",Fast (relief flights),Logistics resilient
+Rail Transportation,Yes (shipments/commutes),Severe (service interruptions),Fast (shipments rebound),Logistics resilient
+Water Transportation,Yes (pre-storm vessel traffic),Extreme (Milton -79%),Partial (weaker after Milton),Fragile (ports vulnerable)
+Truck Transportation,Yes (cargo/evacuations),Severe (road damage),Moderate (some rebound),Moderate resilience
+Transit & Ground Passenger,Yes (passenger activity pre-storm),Severe (Milton -37%),Slow (limited recovery),Fragile
+Government/Public Admin,Yes (deployments pre-storm),Moderate–Severe (esp. Milton),Visible (esp. post-Milton),High (esp. Helene)
+Workplaces,Moderate (commutes surge),"Strong (closures, -20%)",Gradual,Moderate
+Education,Moderate (school prep),"Strong (closures, -29%)",Slow,Fragile
+Retail,Yes (preparation shopping),Strong (store closures),Partial,Fragile
+Leisure,Limited,Strong (tourism collapse),Partial,Fragile
+Utilities,Yes (utility mobilization),Strong (Milton -37%),Volatile rebounds,Volatile but responsive
+Health,Limited,Moderate (dips during storms),Distinct red patches (emergency demand),High (essential services)

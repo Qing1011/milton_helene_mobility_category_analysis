@@ -1,0 +1,33 @@
+.DS_Store
+**/.DS_Store
+
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor and local workspace state
+.vscode/
+.idea/
+
+# Local environment files
+.env
+.env.*
+
+# Generated results
+results/
+
+# Binary presentation and document artifacts
+*.pptx
+*.pdf
+*.png
