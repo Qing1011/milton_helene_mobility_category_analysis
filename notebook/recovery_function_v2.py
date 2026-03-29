@@ -25,7 +25,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.dates as mdates
 
 
-def prepare_time_series_with_exog(flow_y, dates_all):
+def prepare_time_series_with_exog(flow_y, dates_all, include_dow=True):
     """
     Prepare time series data with exogenous variables for ARIMAX modeling.
 
@@ -35,13 +35,17 @@ def prepare_time_series_with_exog(flow_y, dates_all):
         Daily flow values
     dates_all : pd.DatetimeIndex
         Date index for the flow data
+    include_dow : bool, optional
+        If True (default), include day-of-week dummies. Set to False when
+        using seasonal ARIMA with period=7 to avoid double-counting the
+        weekly pattern.
 
     Returns:
     --------
     y_log : pd.Series
         Log-transformed time series with full daily index (gaps as NaN)
     X : pd.DataFrame
-        Exogenous variables (day of week, month, year dummies)
+        Exogenous variables (month and year dummies; day-of-week if include_dow=True)
     """
     # Create raw series
     y_raw = pd.Series(flow_y, index=dates_all)
@@ -53,10 +57,12 @@ def prepare_time_series_with_exog(flow_y, dates_all):
     y.index.freq = "D"
 
     # Exogenous dummies over the full index
-    dow = pd.get_dummies(pd.Series(y.index.dayofweek, index=y.index),
-                         prefix="dow", drop_first=True)
-    year = pd.get_dummies(pd.Series(y.index.year, index=y.index),
-                          prefix="year", drop_first=True)
+    parts = []
+
+    if include_dow:
+        dow = pd.get_dummies(pd.Series(y.index.dayofweek, index=y.index),
+                             prefix="dow", drop_first=True)
+        parts.append(dow)
 
     months = y.index.month
     X_month = pd.DataFrame({
@@ -64,8 +70,13 @@ def prepare_time_series_with_exog(flow_y, dates_all):
         "mon09": (months == 9).astype(float),
         "mon10": (months == 10).astype(float),
     }, index=y.index)
+    parts.append(X_month)
 
-    X = pd.concat([dow, X_month, year], axis=1)
+    year = pd.get_dummies(pd.Series(y.index.year, index=y.index),
+                          prefix="year", drop_first=True)
+    parts.append(year)
+
+    X = pd.concat(parts, axis=1)
     X = X.astype(float)
 
     # Log transform
