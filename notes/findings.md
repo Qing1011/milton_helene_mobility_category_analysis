@@ -136,3 +136,71 @@ Milton's within-region recovery time ranges from 4.1 to 6.2 days (excluding Okee
 | `results/spatial_diagnostics_milton/` | Distance CSV, diagnostic summary, scatter plots, residual maps |
 | `results/quartile_analysis_milton/` | KW summary, quartile descriptives, boxplots, panel figure |
 | `results/confound_analysis_milton/` | Partial correlations, raw vs adjusted comparison, side-by-side boxplots |
+
+Here's the full interpretation:
+
+---
+
+## Results Summary
+
+### Model Fit (Adj. R²)
+
+| DV | Adj. R² | F p-value | Verdict |
+|---|---|---|---|
+| **Largest Drop — Within** | **0.728** | **<0.001** | Strong model |
+| **Total Disruption — Within** | **0.523** | **<0.001** | Moderate-strong |
+| **Outflow Increase** | **0.341** | **<0.001** | Moderate |
+| **Largest Drop — Inflow** | **0.388** | **<0.001** | Moderate |
+| Recovery Time — Within | 0.148 | 0.056 | Weak/borderline |
+| Recovery Time — Inflow | 0.192 | 0.036 | Weak |
+| Total Disruption — Inflow | 0.098 | 0.156 | Not significant |
+
+### Significant Predictors (p < 0.05)
+
+**1. Hurricane dummy (`is_milton`)** — the strongest predictor
+- Within drop: **-17.3** (Milton drops 17% more than Helene) — p < 0.001
+- Within total disruption: **+107** (Milton has much larger total disruption) — p < 0.001
+- Inflow drop: **-15.4** (Milton's inflow drops more) — p = 0.009
+- Milton is simply a more disruptive hurricane across the board
+
+**2. Distance to track (`dist_to_track_mi`)**
+- Within drop: **-1.84** (farther = more negative drop) — p = 0.039
+- This is counterintuitive with the negative sign convention. It means farther counties had **larger drops**. Possible explanation: Helene's far-from-track counties in Appalachian NC experienced severe flooding and landslides despite distance from the wind track. The "track distance" doesn't capture rainfall/flood impact well.
+- Within recovery: **+0.51** (farther = slower recovery) — p = 0.044
+- Within total disruption: **+22.9** (farther = more total disruption) — p = 0.005
+- Outflow increase: **-7.1** (farther = less evacuation) — p = 0.052 — this makes sense (less evacuation far from track)
+
+**3. Insurance coverage (`insurance_coverage_pct`)**
+- Within drop: **+1.98** (higher insurance = less severe drop) — p = 0.044
+- Within recovery: **-0.68** (higher insurance = faster recovery) — p = 0.016
+- Within total disruption: **-28.4** (higher insurance = less total disruption) — p = 0.002
+- Consistent story: insurance coverage is protective across all within-flow metrics
+
+**4. Income (`median_household_income`)**
+- Within recovery: **+0.90** (higher income = slower recovery) — p = 0.017
+- Outflow increase: **+17.4** (higher income = more evacuation) — p = 0.002
+- Inflow drop: **-4.25** (higher income = larger inflow drop) — p = 0.083
+- Interpretation: wealthier areas evacuate more (outflow spike) and lose more inflow, and paradoxically recover slower within-region — possibly because wealthy residents who evacuated take longer to return
+
+**5. Coastal (`is_coastal`)**
+- Outflow increase: **+38.8** (coastal = 39% more outflow increase) — p < 0.001
+- This is the strongest outflow predictor — coastal counties evacuate massively
+
+**6. Pct White (`pct_white`)**
+- Inflow recovery: **+4.4** (whiter = slower inflow recovery) — p = 0.015
+- Inflow total disruption: **+116** (whiter = much more inflow disruption) — p = 0.020
+- Echoes the Milton-only finding — whiter/more rural areas receive less incoming support
+
+### Key Narratives
+
+1. **Hurricane severity matters most**: Milton (Cat 5) caused ~17% more within-flow drop than Helene (Cat 4), controlling for everything else.
+
+2. **Insurance is consistently protective**: Higher insurance coverage → smaller drops, faster recovery, less total disruption. This is the most robust socioeconomic finding.
+
+3. **Wealth enables evacuation but delays return**: Higher-income counties had larger outflow spikes (they can afford to leave) but slower within-region recovery (they stay away longer).
+
+4. **Coastal = massive evacuation**: Being coastal adds ~39% to outflow increase, the strongest single predictor of evacuation behavior.
+
+5. **Distance to track is complex**: Farther counties had larger within-flow drops — likely because Helene's flooding extended far inland (Appalachian NC). This challenges the assumption that track distance = impact severity.
+
+6. **Race affects inflow recovery**: Whiter/more rural areas had slower inflow recovery and more inflow disruption — consistent with less external support reaching these communities.

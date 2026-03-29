@@ -93,31 +93,30 @@ Implementation: `ma.region_mobility(Ms, selected_idx)` from `analysis.py`.
 
 For a single county $j$ (or cluster $C$) within affected region $A$:
 
-- **Within** $W_j(t) = \sum_{d \in A} M(t,d,j)$ — trips FROM county $j$ TO anywhere in $A$ (including $j$ itself). Captures how much this local unit contributes to regional circulation.
+- **Within (self-loop)** — trips where BOTH origin AND destination are in the local unit. Captures purely internal local functioning.
+  - Single county: $W_j(t) = M(t, j, j)$ — self-loop trips within county j
+  - Cluster: $W_C(t) = \sum_{o \in C} \sum_{d \in C} M(t, d, o)$ — all trips internal to the cluster
 - **Outflow** $O_j(t) = \sum_{d \notin A} M(t,d,j)$ — trips FROM county $j$ TO destinations OUTSIDE $A$. Captures evacuation and exit dynamics.
 - **Inflow** $I_j(t) = \sum_{o \notin A} M(t,j,o)$ — trips TO county $j$ FROM origins OUTSIDE $A$. Captures external support arriving at this specific local unit.
 
-For a cluster $C \subset A$ (set of counties), replace $j$ with $C$:
-- $W_C(t) = \sum_{j \in C} \sum_{d \in A} M(t,d,j)$ — trips from cluster to anywhere in A
-- $O_C(t) = \sum_{j \in C} \sum_{d \notin A} M(t,d,j)$ — trips from cluster to outside A
-- $I_C(t) = \sum_{j \in C} \sum_{o \notin A} M(t,j,o)$ — trips to cluster from outside A
+**Key distinction from regional level**: At the regional level, "within" = all A→A trips (both endpoints anywhere in A). At the local level, "within" = self-loop only (both endpoints in the same local unit). This isolates **local disruption** without contamination from damaged destinations elsewhere in A. A drop in self-loop within means local activity in j itself collapsed (people sheltering, businesses closed), not that j's destinations in other counties are damaged.
 
-**Key distinction from regional level**: At the regional level, "within" means both endpoints in A. At the local level, "within" means trips FROM the local unit TO anywhere in A — this captures the local unit's functional connectivity to the rest of the affected region, not just internal-to-local-unit trips.
-
-**Implementation**: `compute_local_flows()` in `recompute_flows.ipynb`. Uses the corrected formulation:
+**Implementation**: `compute_local_flows()` in `recompute_flows.ipynb`:
 ```python
-# For county j with index j_idx, and A_idx = all affected county indices:
-v_j = M_sum[:, :, j_idx]          # shape (days, all_destinations) — trips FROM j
-within_j = v_j[:, A_idx].sum(1)   # trips from j to A
-outflow_j = v_j.sum(1) - within_j # trips from j to not-A
+# Single county (self-loop):
+within_j = M_sum[:, j, j]  # scalar indexing, shape (days,)
 
-fv_j = M_sum[:, j_idx, :]         # shape (days, all_origins) — trips TO j
-total_to_j = fv_j.sum(1)
-inflow_from_A = fv_j[:, A_idx].sum(1)
-inflow_j = total_to_j - inflow_from_A  # trips to j from not-A
+# Cluster (all within-cluster pairs):
+within_C = M_sum[:, c_idx, :][:, :, c_idx].sum(axis=(1, 2))
+
+# Outflow (same for both):
+outgoing_all = M_sum[:, :, local_idx].sum(axis=2)  # (days, all_dest)
+outflow = outgoing_all[:, outside_A_mask].sum(axis=1)
+
+# Inflow (same for both):
+incoming_all = M_sum[:, local_idx, :].sum(axis=1)  # (days, all_origin)
+inflow = incoming_all[:, outside_A_mask].sum(axis=1)
 ```
-
-**Bug history**: The original `analysis.py::region_mobility()` had a bug in inflow computation where `within_region` (computed from outgoing direction j→A) was subtracted from total incoming (→j), producing negative inflow for large counties. Fixed in `recompute_flows.ipynb`.
 
 ### 4.3 Scope of Analysis
 
@@ -145,13 +144,13 @@ $t_{drop} = \arg\min_t \frac{M_t − \hat{M}_t^{(baseline)}}{\hat{M}_t^{(baselin
 
 This measures peak disruption intensity as a percentage deviation from baseline.
 
-### 5.2 Outflow Increase (descriptive only)
+### 5.2 Outflow Increase
 
-Largest positive deviation above baseline within a 2-week window [landing−7d, landing+6d]:
+Largest positive deviation above baseline within the window [landing−3d, landing+6d]:
 
-$\Delta_{max} = \max_t \frac{M_t − \hat{M}_t^{(baseline)}}{\hat{M}_t^{(baseline)}} \times 100$
+$\Delta_{max} = \max_t \frac{M_t − \hat{M}_t^{(baseline)}}{\hat{M}_t^{(baseline)}} \times 100, \quad t \in [t_{landing} - 3, t_{landing} + 6]$
 
-Captures pre-landfall evacuation surge and landing-week outbound spike. Reported as a descriptive metric; not used in recovery time or regression analysis.
+Captures pre-landfall evacuation surge and landing-week outbound spike. The 3-day pre-landing window reflects the typical evacuation order lead time.
 
 ---
 
