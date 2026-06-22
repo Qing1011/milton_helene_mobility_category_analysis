@@ -1,5 +1,10 @@
 # Tasks
 
+> **Legacy (pre-npj).** This is the original task spec for the county-level `regression_largest_drop_v2a/v2b.ipynb`
+> pipeline (50-mi, pooled OLS, 17→7 categories, all-county). It is **superseded for the npj submission** by
+> `npj/notebook/PLAN.md` (100-mi; 6 categories; Helene clusters + Milton counties; separate per-storm Bayesian
+> primary). Kept for history.
+
 To investigate the maximum reduction in county-level mobility (aggregated across all categories) during hurricane events, measure trend-based recovery time, and analyze associations with local socioeconomic factors.
 
 Flow types analyzed: **within-region** (A→A), **inflow** (not_A→A), **outflow** (A→not_A).
@@ -7,11 +12,11 @@ Flow types analyzed: **within-region** (A→A), **inflow** (not_A→A), **outflo
 ---
 
 ## Notebook 1: Data Preparation, Baseline, and Recovery Metrics (`regression_largest_drop_v2a.ipynb`)
-**Objective:** Process raw mobility data, establish SARIMAX baselines, compute disruption and recovery metrics per county, export results and per-county plots.
+**Objective:** Process raw mobility data, establish calendar-AR(1) baselines, compute disruption and recovery metrics per county, export results and per-county plots.
 
 - **Data Loading & Flow Decomposition**: Load weekly H5 mobility files and decompose into within-region, inflow, and outflow per county using `ma.region_mobility()`. Sum all 17 raw categories to get total county-level flow for each flow type.
 
-- **Baseline Computation**: For each county and flow type, fit a SARIMAX model (AR(1) with day-of-week, month, and year dummies) on pre-hurricane training data (2023 Jul–Oct + 2024 Jul to 7 days before landing). Uses `recovery_function_v2.py` which fixes the X_train NaN masking bug from v1.
+- **Baseline Computation**: For each county and flow type, fit a calendar-AR(1) baseline (a regression on day-of-week, month, and year dummies with AR(1) errors) on pre-hurricane training data (2023 Jul–Oct + 2024 Jul to 7 days before landing). Uses `recovery_function_v2.py` which fixes the X_train NaN masking bug from v1.
 
 - **Largest Drop Calculation** (within, inflow): Compute relative deviation from baseline and identify the minimum % deviation during the landing week [landing, landing+6d].
 
@@ -22,7 +27,7 @@ Flow types analyzed: **within-region** (A→A), **inflow** (not_A→A), **outflo
 - **Visual Validation**: Export per-county baseline validation plots (observed vs predicted with 95% CI) and per-county recovery plots (raw/smoothed deviation, trough, monotonic segment, Theil–Sen fit, recovery annotation).
 
 - **Data Export**: Export per hurricane to `results/{hurricane}/`:
-  - `baseline_{within,inflow,outflow}.csv` — SARIMAX predictions
+  - `baseline_{within,inflow,outflow}.csv` — calendar-AR(1) baseline predictions
   - `largest_drop_{within,inflow}.csv` — peak disruption
   - `outflow_increase.csv` — evacuation surge
   - `recovery_{within,inflow}.csv` — trend-based recovery time

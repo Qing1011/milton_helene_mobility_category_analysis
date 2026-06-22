@@ -2,6 +2,14 @@
 
 Reference Repository: https://github.com/Qing1011/hurricane_mobility
 
+> **Note (2026-06-19, rev. 2026-06-22):** This file documents the broad project. The **npj Urban Sustainability
+> submission** uses a scoped, updated spec that diverges from parts of this doc (100-mi cutoff; 6 categories, no
+> Utilities; local analysis at **cluster** level for **Helene** and **county** level for **Milton** as the primary —
+> Milton clustering is kept only as an appendix robustness check; 3 flow-magnitude DVs with recovery dropped as a DV;
+> separate per-storm **Bayesian** regression (primary) with OLS supplementary; distance-band demoted to Supplementary;
+> GWR Helene-only). For anything related to that submission, **`npj/notebook/PLAN.md` is the single live spec** and
+> overrides the npj-relevant parts below.
+
 ---
 
 ## 1. Project Objective
@@ -55,11 +63,11 @@ Additional datasets:
 
 ## 3. Baseline Model (Counterfactual Mobility)
 
-### 3.1 SARIMAX with Exogenous Dummies
+### 3.1 Calendar-AR(1) baseline (regression on dummies with AR(1) errors)
 
 For each category/region or distance-band:
 
-- Fit a SARIMAX model: AR(1) with exogenous day-of-week, month, and year dummies.
+- Fit a **calendar-AR(1) baseline**: a regression on day-of-week, month, and year dummies with AR(1) errors (fit via the `statsmodels` SARIMAX routine).
 - Model specification: order=(1,0,0), seasonal_order=(0,0,0,0), with intercept.
 - Training data: 2023 Jul–Oct + 2024 Jul to 7 days before landing (hurricane-adaptive window).
 - Log-transform: $y_{log} = \log(1 + y)$, back-transformed via $\exp(y_{log}) - 1$.
@@ -162,7 +170,7 @@ Recovery time is defined as:
 
 1. Compute relative deviation: $rd_t = (M_t − \hat{M}_t) / \hat{M}_t$
 2. Smooth with a centred 3-day moving average.
-3. Find the trough (most negative smoothed value within 7 days after landing).
+3. Find the trough (most negative smoothed value within **10 days** after landing; `trough_search_days=10`, updated 2026-06-22 from 7 — 7 d left-censored the trough of the most severely disrupted on-track units).
 4. Extract the **monotonic recovery segment**: walk forward from trough, keeping only the initial non-decreasing run.
 5. Fit **Theil–Sen robust slope** (median-based, resistant to outliers) on the monotonic segment:
    $\hat{rd}(t) = \alpha + \beta t$
@@ -187,7 +195,7 @@ For the affected region (all counties aggregated), analyzes **7 categories × 2 
 
 For each of the 14 combinations:
 
-1. Fit SARIMAX baseline on pre-hurricane data
+1. Fit the calendar-AR(1) baseline on pre-hurricane data
 2. Compute relative deviation from baseline during forecast window
 3. Apply trend-based recovery (smooth → trough → monotonic → Theil–Sen → recovery time)
 4. Generate recovery plots with raw/smoothed deviation, trough, monotonic segment, and Theil–Sen fit line
@@ -204,7 +212,7 @@ For each of the 14 combinations:
 
 ### 7.1 Rationale
 
-Individual county-level SARIMAX baselines are unstable for rural counties with low mobility volumes, producing noisy relative deviations and unreliable recovery estimates. Distance-band aggregation solves this by:
+Individual county-level calendar-AR(1) baselines are unstable for rural counties with low mobility volumes, producing noisy relative deviations and unreliable recovery estimates. Distance-band aggregation solves this by:
 - Increasing signal volume per unit (more stable baselines)
 - Creating a natural spatial gradient from the hurricane track
 - Enabling clearer interpretation of how disruption/recovery varies with proximity
@@ -220,7 +228,7 @@ Counties are grouped into concentric distance bands based on the minimum distanc
 
 (Band boundaries may be adjusted based on county count and population distribution.)
 
-For each band, **within-region mobility** is **summed** across all constituent counties before fitting SARIMAX and computing metrics. This produces one time series per band × category. (Inflow is not analyzed at the band/county level — see Section 4.1.)
+For each band, **within-region mobility** is **summed** across all constituent counties before fitting the calendar-AR(1) baseline and computing metrics. This produces one time series per band × category. (Inflow is not analyzed at the band/county level — see Section 4.1.)
 
 ### 7.3 Distance Computation
 
@@ -241,7 +249,7 @@ where the hurricane track is represented as a polyline of observed positions and
 - Result: one time series per band × category
 
 **Step 3: Compute metrics per band**
-- Fit SARIMAX baseline per band (much more stable than per-county)
+- Fit the calendar-AR(1) baseline per band (much more stable than per-county)
 - Compute largest drop and trend-based recovery time per band
 - Generate band-level recovery plots
 
@@ -419,7 +427,7 @@ Python: `mgwr` package (Multiscale GWR)
 
 ### Distance-Band Level (replacing per-county)
 
-- Per-band SARIMAX baseline validation plots
+- Per-band calendar-AR(1) baseline validation plots
 - Per-band trend-based recovery plots (3–5 bands per hurricane)
 - Band-level disruption and recovery metric CSVs
 
@@ -461,7 +469,7 @@ This framework enables:
 | `regression_largest_drop_v2a.ipynb` | County-level data prep, baseline, metrics (Notebook 1) — to be updated to v3a with distance-band |
 | `regression_largest_drop_v2b.ipynb` | County-level pooled OLS regression (Notebook 2) — baseline reference |
 | `spatial_diagnostics_milton.ipynb` | Spatial diagnostics: LOWESS, Moran's I, residual maps (Milton N=21) |
-| `recovery_function_v2.py` | Shared SARIMAX fitting and prediction functions (v2 bug fix) |
+| `recovery_function_v2.py` | Shared calendar-AR(1) baseline fitting (via SARIMAX routine) and prediction functions (v2 bug fix) |
 | `geoid_idx_names.csv` | County GEOID ↔ index mapping |
 | `acs_socioeconomic_v2.csv` | Cached ACS socioeconomic variables |
 | `largest_drop.md` | Task specification for county-level analysis notebooks |

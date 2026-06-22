@@ -5,18 +5,41 @@
 
 ---
 
-## Current Status (2026-03-26)
+## Current Status (2026-06-22) — npj submission spec
+
+The project has moved to the **npj Urban Sustainability** submission. **`npj/notebook/PLAN.md` is the single live
+spec**; the 2026-03-26 status below is **historical** (distance-band + pooled-OLS + GWR-pending design, now retired).
+
+**Locked decisions (npj):**
+- **100-mi** affected-region cutoff everywhere (the old 50-mi is sensitivity/Supplementary only).
+- **6 categories** (no Utilities).
+- **Local units = Helene clusters (101) + Milton counties (34) as the PRIMARY** (pooled N=135). Milton was clustered
+  (30) and checked, but per-county Milton baselines are stable and clustering blurred signal → **Milton clustering is
+  appendix robustness only**. Helene genuinely needs clustering (487 tiny rural units).
+- **3 flow-magnitude DVs**: `largest_drop_within`, `largest_drop_inflow`, `largest_increase_outflow`. **Recovery time
+  is NOT a DV** (reported descriptively).
+- **Regression = separate per-storm, Bayesian primary / OLS supplementary** (the pooled-OLS-with-`is_milton` design is
+  superseded). GWR Helene-only. Distance-band → a single Supplementary panel.
+- **Outflow degeneracy**: flag, don't drop; exclude `outflow_degenerate` units from the outflow DV fits only.
+
+**npj package status:** notebooks in `npj/notebook/` (`00`/`00b`/`00c`/`00d`/`00e` compute; `01`–`06b` figures);
+outputs in `results/npj_100mi/`. Done: 00, 02, 03, 04, 06a, 06b. Pending: **05 flow maps** (rebuild — Helene cluster
++ Milton county main; Milton-clustered + NCHS appendix) and **01 design** (user-owned). See PLAN.md for the table.
+
+---
+
+## Current Status (2026-03-26) — HISTORICAL (superseded by the npj spec above)
 
 ### Completed Components
 
 1. **Regional-level recovery analysis** (`trend_based_recovery_region_v2.ipynb`)
-   - SARIMAX baseline + Theil-Sen trend-based recovery for 7 categories × 3 flow types
+   - calendar-AR(1) baseline + Theil-Sen trend-based recovery for 7 categories × 3 flow types
    - Recovery summary CSVs and bar charts for both Milton and Helene
    - Inflow plots with 2023 comparison reference
    - Status: ✅ Complete
 
 2. **County-level data prep and metrics** (`regression_largest_drop_v2a.ipynb`)
-   - Per-county SARIMAX baseline (within, inflow, outflow)
+   - Per-county calendar-AR(1) baseline (within, inflow, outflow)
    - Largest drop (within, inflow), outflow increase, trend-based recovery
    - Per-county recovery plots and baseline validation plots
    - Exports to `results/{hurricane}/`
@@ -56,7 +79,7 @@
    - GWR dependent variables: `largest_drop_within` and `recovery_within` only
 
 2. **Replace per-county analysis with distance-band aggregation**
-   - Problem: County-level SARIMAX baselines are unstable for rural counties (low volumes → noisy time series → unreliable recovery estimates)
+   - Problem: County-level calendar-AR(1) baselines are unstable for rural counties (low volumes → noisy time series → unreliable recovery estimates)
    - Solution: Group counties into distance bands from the hurricane track (e.g., 0-10mi, 10-25mi, 25-50mi)
    - Benefits: More stable baselines, natural spatial gradient, cleaner recovery estimation
    - Implementation: New notebook `regression_largest_drop_v3a.ipynb`
@@ -73,7 +96,7 @@
 
 ### Known Issues
 
-1. **County-level noise**: Individual county time series (especially rural, low-population counties) produce very noisy relative deviations. SARIMAX baseline often has wide CI bands that encompass the true values, making recovery detection unreliable. → Addressed by distance-band aggregation.
+1. **County-level noise**: Individual county time series (especially rural, low-population counties) produce very noisy relative deviations. the calendar-AR(1) baseline often has wide CI bands that encompass the true values, making recovery detection unreliable. → Addressed by distance-band aggregation.
 
 2. **Helene outflow vs Milton outflow asymmetry**: Helene outflow drops below baseline (infrastructure damage prevented departure); Milton outflow surges above baseline (forecasted evacuation). This is a real physical difference, not a code bug. The current trend_based_recovery function is designed for recovery from drops and cannot measure recovery from positive spikes. → Addressed by excluding outflow from recovery analysis.
 
@@ -93,7 +116,7 @@
 - [ ] Implement distance-band aggregation notebook (`regression_largest_drop_v3a.ipynb`) — for Helene
   - Compute county centroid → hurricane track distance
   - Define distance bands (0-10, 10-25, 25-50 miles or similar)
-  - Aggregate mobility by band, fit SARIMAX, compute metrics
+  - Aggregate mobility by band, fit the calendar-AR(1) baseline, compute metrics
   - Generate band-level recovery plots
 - [ ] Decide Helene county grouping strategy (distance-band vs spatial smoothing vs spatial clustering)
 - [ ] Implement GWR for Helene (`regression_largest_drop_v3b.ipynb`) — after Helene grouping resolved
@@ -105,7 +128,7 @@
 
 | Date | File | Change |
 |------|------|--------|
-| 2025-01 | `recovery_function.py` | Initial SARIMAX + recovery functions |
+| 2025-01 | `recovery_function.py` | Initial calendar-AR(1) baseline (SARIMAX routine) + recovery functions |
 | 2025-01 | `recovery_function_v2.py` | Fixed X_train NaN masking bug |
 | 2025-02 | `regression_largest_drop_v2a.ipynb` | County-level data prep with correct flow decomposition |
 | 2025-02 | `regression_largest_drop_v2b.ipynb` | Pooled OLS regression across hurricanes |

@@ -1,5 +1,12 @@
 # Findings — Hurricane Milton County-Level Analysis (N=21)
 
+> **Status note (2026-06-22):** This file is the **historical analysis record** — the Milton N=21 (50-mi) study and
+> the 2026-05-18 pooled-OLS cutoff-sensitivity work. For the **npj submission** it is **demoted to Supplementary**:
+> the npj primary regression is **separate per-storm Bayesian** (not pooled OLS with `is_milton`), at the **100-mi**
+> cutoff, with local units = **Helene clusters + Milton counties (N=135 pooled, Milton stays per-county)**. The
+> pooled-spec `dist_to_track` sign-flip and precip-NS stories below are pooled-specification artefacts and are
+> re-examined per-storm in the npj package. **Live spec = `npj/notebook/PLAN.md`.**
+
 ## Previous Observations (descriptive, from scatter plots)
 
 - Higher income → smaller within-region drop (visible in scatter, not significant)
@@ -203,4 +210,57 @@ Here's the full interpretation:
 
 5. **Distance to track is complex**: Farther counties had larger within-flow drops — likely because Helene's flooding extended far inland (Appalachian NC). This challenges the assumption that track distance = impact severity.
 
+   > **⚠ RETRACTED 2026-05-18 — see §"Affected-region cutoff sensitivity" below.** The negative coefficient was a sample-selection artefact of the 50-mile cutoff. At a 100-mile cutoff (which includes Buncombe/Yancey/Avery NC — the actual Helene disaster region), the coefficient flips back to the orthodox positive sign. There is no puzzle.
+
 6. **Race affects inflow recovery**: Whiter/more rural areas had slower inflow recovery and more inflow disruption — consistent with less external support reaching these communities.
+
+---
+
+## Affected-region cutoff sensitivity (2026-05-18) — **the "puzzle" was an artefact**
+
+The pooled regression in §"Results Summary" used a 50-mile Helene cutoff (271 counties → 38 NCHS-homogeneous clusters; pooled N = 59). The 100-mile cutoff already prepared in [`recompute_flows.ipynb`](../notebook/recompute_flows.ipynb) yields 487 counties → 101 clusters (pooled N = 135 with 34 Milton + 101 Helene units) and **includes Buncombe NC (Asheville, cluster 17) and the rest of the Appalachian disaster region** that the 50-mi cutoff excluded.
+
+### Headline — `dist_to_track_mi` flips sign across cutoffs
+
+| Sample | N | β(dist_to_track_mi) | p | Adj. R² | Direction |
+|---|---:|---:|---:|---:|---|
+| **50 mi cutoff** | 59 | **−2.12** | **0.028** | 0.56 | Counterintuitive (the "puzzle") |
+| **100 mi cutoff** | 135 | **+1.10** | 0.091 | 0.36 | Orthodox (farther = smaller drop) |
+
+The 50-mi negative β was identified almost entirely from a truncated coastal/south-Georgia subset that excludes the inland-flooding region. Once Asheville and the southern-Appalachian counties are included, the wind-decay direction is restored.
+
+**Implications:**
+- Key Narrative 5 above is retracted. Track-distance is not a misspecified exposure proxy; it just needs an affected-region definition that doesn't cut off the disaster.
+- The hydrologic-exposure variable is no longer required to "fix" anything.
+- The `is_milton` effect shrinks but stays highly significant (β = −7.3 at 50 mi → β = −4.6 at 100 mi, p < 0.001 in both) — the storm-specific contrast holds across cutoffs.
+
+### Hydrologic-exposure variable (PRISM 7-day precipitation) — orthodox sign, not significant
+
+Five aggregation alternatives, all run at the 100-mi pooled sample:
+
+| Precip aggregation | β | p | Adj. R² | Verdict |
+|---|---:|---:|---:|---|
+| pop-weighted mean (7-day total) | −0.62 | 0.37 | 0.355 | NS |
+| max within-cluster (7-day total) | −0.45 | 0.52 | 0.353 | NS |
+| **pop-weighted mean (peak day)** | **−1.23** | **0.092** | 0.366 | **closest** |
+| max within-cluster (peak day) | −1.08 | 0.14 | 0.362 | NS |
+| max within-cluster (p90 daily) | −0.62 | 0.37 | 0.355 | NS |
+
+All five aggregations carry the **orthodox negative sign** (more rain → larger mobility drop), but none clears p < 0.05 after `is_milton` is in the model. Three contributing reasons:
+
+1. `is_milton` absorbs the between-hurricane precip difference (Milton mean 172 mm vs Helene mean 118 mm).
+2. PRISM county-mean smooths the orographic peaks that drove Helene's catastrophic rainfall. Validation against known truth: PRISM gives Buncombe NC 230 mm county-mean for the 7-day window vs ≈ 350–600 mm at the wettest mountain locations.
+3. Pooled correlation between precipitation and track distance is only −0.21, so the two variables are not strong substitutes.
+
+The peak-day population-weighted aggregation comes closest (p = 0.09), consistent with mobility disruption being driven by *intensity* (flash-flood-relevant) rather than *total accumulation*.
+
+### Recommended framing for the manuscript
+
+> *"At a 50-mile affected-region cutoff, `dist_to_track_mi` showed a counterintuitive negative association with mobility disruption (β = −2.12, p = 0.028). Expanding the cutoff to 100 miles — capturing Helene's documented inland-flooding footprint, including Buncombe County, NC — restored the orthodox wind-decay direction (β = +1.10, p = 0.091, N = 135). The 50-mile result was therefore a sample-selection artefact rather than evidence of exposure misspecification. PRISM peak-day precipitation carries the expected negative sign (β = −1.23, p = 0.09) but does not reach significance once the storm dummy is included, in part because county-mean precipitation dampens the orographic peaks that drove Helene's catastrophic rainfall. We report the 100-mile pooled regression as our primary specification and the 50-mile result as sensitivity (Supplementary)."*
+
+### Artefacts produced
+
+- `results/local_level/regression/pooled_dataset_100mi.csv` — augmented pooled dataset, N = 135
+- `results/local_level/regression/pooled_dataset_100mi_with_precip.csv` — with `precip_total_3day`, `precip_total_7day`
+- `results/local_level/regression/pooled_dataset_100mi_peakprecip.csv` — with all 5 alternative aggregations
+- `results/exposure/county_ppt_daily_100mi.csv` — daily PRISM ppt for 516 counties × 13 days
