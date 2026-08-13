@@ -90,21 +90,45 @@ Original checklist, all discharged:
 
 ---
 
-## 2. Phase 2 — Choose the two displays
+## 2. Phase 2 — The two displays ✅ **LOCKED 2026-08-13**
 
-Under D1 this is the highest-leverage decision after the headline. Recommendation:
+The BC cap is on **display items** (≤2), not panels — so each display may carry multiple panels.
 
-**Fig 1 — the recovery contrast (the headline).** Rebuild from the existing `local_analysis.png` /
-`figure4_recovery_{within,inflow}`: overlaid per-unit recovery histograms, Helene blue vs Milton red, **within
-panel showing near-identical distributions, inflow panel showing clean separation**. That single contrast is
-the paper. Optionally add a compact third panel from `figure3_recovery_*` showing the inflow gap holds across
-all six categories.
+### Fig 1 — the recovery contrast (the headline)
+Rebuild from `local_analysis.png` / `figure4_recovery_{within,inflow}`: overlaid per-unit recovery
+histograms, Helene blue vs Milton red.
 
-**Fig 2 — where and why.** Recommended composite: **inflow-drop choropleth for both storms** (from
-`figure5_flow_maps`, the inflow column) **+ the Helene driver forest with the GAM-collapse annotation** (from
-`spatial_drivers.ai`). The map gives the broad urban-science reader an immediate spatial read; the forest
-carries the exposure-over-SES result and the honest confounding caveat. *Confirm this pairing before drafting
-¶3 — it determines what ¶3 can claim.*
+| Panel | Source | Carries |
+|---|---|---|
+| **1a** within recovery | `figure4_recovery_within` | the **null** — two near-identical distributions (4.4 vs 4.5 d, p = 0.294) |
+| **1b** inflow recovery | `figure4_recovery_inflow` | the **gap** — clean separation (11.1 vs 5.1 d, p < 0.001) |
+| *1c (optional)* | `figure3_recovery_inflow_HvM` | the gap holds across all six categories |
+
+Both panels must be drawn on the **20k-cut sample** (n = 96/33 within, 46/28 inflow) so the histogram *n*
+matches the ¶2 text. The 1a/1b juxtaposition **is** the argument — same axis scale across both panels so the
+reader sees the separation appear.
+
+### Fig 2 — where and why (confirmed 2026-08-13)
+
+| Panel | Source | Carries |
+|---|---|---|
+| **2a** inflow-drop choropleth, both storms | `figure5_flow_maps` (**inflow column** of the 2×3) | *where* the reconnection deficit sits |
+| **2b** Helene driver forest, 3 DVs | `drivers/figure6a_hev_per_storm` | exposure governs shock: the 4 credible effects (`is_coastal`, `pct_white`, `precip_total_7day`, `dist_to_track_mi`) |
+| **2c** GAM coefficient collapse, inflow | `spatial/figures/figure_gam_inflow_coefs` | `pct_white` → β ≈ 0 once `s(x,y)` enters (p = 0.023, dev. expl. 0.15 → 0.52) |
+
+**Why 2c earns its place despite BC compression.** 2b shows `pct_white` → inflow drop as credible
+(−7.0 [−11.0, −3.4]); 2c shows it collapses under spatial control. Carrying **both in one display** makes the
+figure tell the honest story by itself, and it is what licenses ¶3's "not separably identifiable from
+geography" wording. Without 2c, ¶3 either over-claims that race drives the reconnection gap or hedges
+without visible support.
+
+**Blocker:** `npj/figure/spatial_drivers.ai` (2026-06-27) has **no 400 ppi export**. Check first whether that
+existing assembly already covers 2b + 2c before rebuilding — if so, Fig 2 is a merge of it with the 2a map
+rather than a fresh assembly.
+
+**Demoted to SI by this choice:** category heatmaps, regional recovery (Fig 3), the within/outflow columns of
+the flow maps, `figure_gam_inflow_sxy`, `figure6b_moran_summary`, all GWR/LISA panels, Tables 1–2, every
+sensitivity analysis, and the pooled 06c/08c package (referee-rebuttal asset, not cited in main text).
 
 Everything else → Supplementary: heatmaps (Fig 2 old), regional recovery (Fig 3 old), full flow maps (Fig 5
 old), Moran/LISA/GWR (06b), GAM panels (08), Tables 1–2, the 20k-cut and no-wind sensitivities, the
