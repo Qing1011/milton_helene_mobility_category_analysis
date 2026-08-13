@@ -182,10 +182,27 @@ spatially-structured effect (Hodges & Reich 2010; Paciorek 2010).
 
 ---
 
-## 4. Phase 4 — Displays and Supplementary (parallel with Phase 3)
+## 4. Phase 4 — Displays and Supplementary — **PARTIAL 2026-08-13**
 
-- [ ] Rebuild Fig 1 as a single BC-format display (§2); export 400 ppi + vector.
-- [ ] Assemble Fig 2 (§2); requires the missing `400ppi/spatial_drivers.png` export.
+Built by [`npj/notebook/_phase4_bc_figures.py`](../npj/notebook/_phase4_bc_figures.py) (plot-only,
+re-runnable) → `results/npj_100mi/bc_figures/`, PDF + PNG @ 450 dpi.
+
+- [x] **Fig 1 rebuilt** (`figureBC1_recovery_contrast`). Rebuild, not re-use: the existing
+      `figure4_recovery_{within,inflow}` sit on **different x-axes** (0–18 vs 0–26), which defeats the
+      panel-to-panel comparison the whole argument rests on, and they annotate **mean/sd** while the
+      manuscript quotes **median [IQR]** — figure and text would have disagreed. Now a common 0–25 day
+      axis, histograms normalized to *fraction of units* (n = 96 vs 33 would otherwise make Milton
+      visually negligible), median lines + IQR + P annotated per panel. `sharey` deliberately **off**:
+      the tall within-area mode flattens the inflow panel when shared.
+- [x] **Fig 2c built** (`figureBC2c_gam_collapse`) as a before/after **dumbbell** rather than a
+      two-model forest — it answers the one question the panel exists for (which effects survive
+      geographic adjustment) far more directly. `% White` and `Coastal` rows shaded.
+- [ ] **Fig 2a — cannot be built in this environment.** `geopandas` is not installed and the repo
+      holds no county geometry. Take the inflow column from the existing
+      `results/npj_100mi/figure5_flow_maps.pdf` and assemble in Illustrator.
+- [x] **Fig 2b — not rebuilt.** `drivers/figure6a_hev_per_storm.pdf` is already fit for purpose.
+- [ ] Assemble Fig 2 composite (2a + 2b + 2c) in Illustrator; still needs the `spatial_drivers.ai`
+      400 ppi export.
 - [ ] Write two self-contained captions carrying enough detail that the figures read standalone.
 - [ ] Build the SI: everything from §2's demotion list, plus Tables 1–2, the full Methods, and the
       Fig 7 composite (Moran + GAM collapse + `s(x,y)`) — now SI, so assemble at lower priority.

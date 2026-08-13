@@ -447,6 +447,67 @@ emit(
 )
 
 # --------------------------------------------------------------------------------------
+# H. Within-Helene gradient checks — guards against ecological inference
+#
+# The headline is a BETWEEN-region contrast (Helene's rural-inland region reconnects slower
+# than Milton's urban-coastal one). A reader may wrongly infer a WITHIN-region gradient —
+# that more rural units inside Helene reconnect slower. They do not. These correlations
+# exist to state that boundary explicitly in the manuscript.
+# --------------------------------------------------------------------------------------
+log.info("H. within-Helene gradient checks")
+
+_pool = pd.read_csv(LOCAL / "regression/pooled_dataset_100mi_primary_exposure.csv")
+_rec = metrics[("helene", "inflow")][["unit_id", "recovery_days"]]
+_keep_hi = keep[("helene", "inflow")]
+_h = _pool[_pool.hurricane == "helene"].merge(_rec, on="unit_id")
+_h = _h[_h["unit_id"].isin(_keep_hi)].dropna(subset=["recovery_days"])
+
+GRADIENTS = [
+    ("nchs_code", "urban-rural code", "rurality does NOT predict reconnection speed"),
+    ("pop_density", "population density", "density does NOT predict reconnection speed"),
+    ("dist_to_track_mi", "distance to track", "exposure DOES predict reconnection speed"),
+    ("pct_white", "% White", "covaries, but confounded with geography (see GAM-INFLOW)"),
+]
+for col, label, why in GRADIENTS:
+    rho, pv = stats.spearmanr(_h["recovery_days"], _h[col])
+    emit(
+        id=f"GRAD-HELENE-INFLOWREC-{col.upper()}",
+        block="P3",
+        quantity=f"Inflow recovery vs {label}, within Helene",
+        storm="helene",
+        scale="local",
+        flow="inflow",
+        sample="20k_cut",
+        n=len(_h),
+        value=f"rho = {rho:.2f}, {pfmt(pv)}",
+        stat="Spearman rank correlation",
+        extra="",
+        source_file="computed here",
+        note=why,
+    )
+
+# also record that inflow DROP is not a distance gradient (kills the "corridor" narrative)
+_hd = _pool[
+    (_pool.hurricane == "helene") & (_pool.unit_id.isin(_keep_hi))
+]
+rho_d, p_d = stats.spearmanr(_hd["largest_drop_inflow"], _hd["dist_to_track_mi"])
+emit(
+    id="GRAD-HELENE-INFLOWDROP-DIST",
+    block="P3",
+    quantity="Inflow drop vs distance to track, within Helene",
+    storm="helene",
+    scale="local",
+    flow="inflow",
+    sample="20k_cut",
+    n=len(_hd),
+    value=f"rho = {rho_d:.2f}, {pfmt(p_d)}",
+    stat="Spearman rank correlation",
+    extra=f"deepest declines {_hd.largest_drop_inflow.min():.0f}% to {_hd.nsmallest(8,'largest_drop_inflow').largest_drop_inflow.max():.0f}%",
+    source_file="computed here",
+    note="NOT a distance gradient — do not describe the map as a corridor",
+)
+
+# --------------------------------------------------------------------------------------
 # Write
 # --------------------------------------------------------------------------------------
 COLS = [
