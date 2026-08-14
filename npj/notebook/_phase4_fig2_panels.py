@@ -180,8 +180,12 @@ log.info("aspect Helene %.2f  Milton %.2f  (near-identical: no gap beside Milton
          ASPECT["Helene"], ASPECT["Milton"])
 
 
-def map_row(storm: str, letters: str, colorbars: bool) -> None:
-    """One storm's three flow maps at the shared panel height."""
+def map_row(storm: str, colorbars: bool) -> None:
+    """One storm's three flow maps at the shared panel height.
+
+    No per-panel letters: Figure 2 is lettered at the composite level (maps / forest / GAM)
+    during assembly, so a-f here would collide with that scheme.
+    """
     cfg = HURR[storm]
     is_cluster = cfg["level"] == "cluster"
     edge_c, edge_w = ("#cfcfcf", 0.1) if is_cluster else ("#666", 0.15)
@@ -191,7 +195,7 @@ def map_row(storm: str, letters: str, colorbars: bool) -> None:
     fig_h = PANEL_H + (0.62 if colorbars else 0.16)
     fig, axes = plt.subplots(1, 3, figsize=(row_w, fig_h), constrained_layout=True)
 
-    for ax, (flow, _, _), letter in zip(axes, FLOWS, letters):
+    for ax, (flow, _, _) in zip(axes, FLOWS):
         g = layers[(storm, flow)]
         counties.cx[x0:x1, y0:y1].plot(ax=ax, facecolor="#f2f2f2", edgecolor="white", linewidth=0.25)
         states.cx[x0:x1, y0:y1].boundary.plot(ax=ax, color="#9a9a9a", linewidth=0.4)
@@ -206,8 +210,6 @@ def map_row(storm: str, letters: str, colorbars: bool) -> None:
         ax.set_ylim(y0, y1)
         ax.set_aspect("equal")
         ax.set_axis_off()
-        ax.text(0.03, 0.97, letter, transform=ax.transAxes, va="top", ha="left",
-                fontweight="bold", fontsize=9)
         if colorbars is False:  # flow headings only on the top (Helene) row
             ax.set_title(flow.capitalize(), fontweight="bold", fontsize=8.5, pad=2)
 
@@ -364,8 +366,8 @@ def gam_collapse(width: float, height: float) -> None:
 
 
 if __name__ == "__main__":
-    map_row("Helene", "abc", colorbars=False)
-    map_row("Milton", "def", colorbars=True)
+    map_row("Helene", colorbars=False)
+    map_row("Milton", colorbars=True)
     forest()
     # free column to the RIGHT OF BOTH map rows (they are height-constrained, see PANEL_H note)
     gap = ROW_W - 3 * PANEL_H * max(ASPECT.values())
