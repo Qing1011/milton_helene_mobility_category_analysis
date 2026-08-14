@@ -80,8 +80,10 @@ ROW_W = 7.1          #: full journal figure width (inches)
 #: Map panel height is fixed, NOT derived from ROW_W. Measured footprint aspects are near-identical
 #: (Helene 0.76, Milton 0.78), so three panels filling 7.1 in would stand 3.11 in tall — two such
 #: rows plus the forest give a 9.8 in figure, past the ~9.4 in page limit. Constraining height
-#: instead leaves ~2.2 in free to the right of BOTH map rows, which is where the GAM panel goes.
-PANEL_H = 2.15
+#: instead leaves free width to the right of BOTH map rows, which is where the GAM panel goes.
+#: 2.0 rather than 2.15 so that free column reaches ~2.4 in — at 1.9 in the GAM's y-labels
+#: squeezed the axes hard enough to push its x-label off the canvas.
+PANEL_H = 2.0
 #: Boundary simplification tolerance, metres (EPSG:5070). At print scale 1 mm ~ 20 km, so 500 m is
 #: invisible, but it takes the Helene export from ~90 MB of raw TIGER vertices to a few MB —
 #: unsimplified county geometry is what makes the PDF unusable in Illustrator.
@@ -304,7 +306,14 @@ def forest() -> None:
 # GAM collapse — resized to sit beside the Milton row
 # ======================================================================================
 def gam_collapse(width: float, height: float) -> None:
-    """Before/after dumbbell, sized for the gap beside the Milton map row."""
+    """Effect on Helene inflow before vs after a spatial smooth, one offset row per model.
+
+    The two models sit on **separate offset rows** rather than sharing one. Three of the five
+    terms barely move (income -3.08 -> -2.70, insurance 1.14 -> 1.86, distance 0.90 -> 0.43), so a
+    single-row dumbbell buried the grey marker under the blue one and hid the connector entirely.
+    Offsetting keeps every marker visible; a diagonal connector preserves the before/after reading
+    that makes this panel worth a slot.
+    """
     d = pd.read_csv(GAM_TMP / "helene_inflow_coefs.csv")
     d = d[d.term != "(Intercept)"].copy()
     L = {"income": "Median income", "insurance": "Insurance %", "white": "% White",
@@ -313,37 +322,45 @@ def gam_collapse(width: float, height: float) -> None:
     m1 = d[d.model == "M1_space"].set_index("term")
     order = m0.index.tolist()
     HIGHLIGHT = {"white", "coastal"}
+    OFF = 0.20
 
     fig, ax = plt.subplots(figsize=(width, height))
     for i, term in enumerate(order):
         y = len(order) - 1 - i
         if term in HIGHLIGHT:
-            ax.axhspan(y - 0.42, y + 0.42, color="#f2f2f2", zorder=0)
+            ax.axhspan(y - 0.5, y + 0.5, color="#f2f2f2", zorder=0)
         e0, e1 = m0.loc[term, "estimate"], m1.loc[term, "estimate"]
-        ax.annotate("", xy=(e1, y), xytext=(e0, y), zorder=1,
-                    arrowprops=dict(arrowstyle="-|>", color="0.55", lw=0.8, shrinkA=2.5, shrinkB=0))
-        for est, se, pv, col, mk in [
-            (e0, m0.loc[term, "se"], m0.loc[term, "p"], "#7f7f7f", "o"),
-            (e1, m1.loc[term, "se"], m1.loc[term, "p"], "#1f77b4", "s"),
+        ax.annotate("", xy=(e1, y - OFF), xytext=(e0, y + OFF), zorder=1,
+                    arrowprops=dict(arrowstyle="-|>", color="0.55", lw=0.7,
+                                    shrinkA=2.5, shrinkB=2.5))
+        for est, se, pv, col, mk, dy in [
+            (e0, m0.loc[term, "se"], m0.loc[term, "p"], "#7f7f7f", "o", +OFF),
+            (e1, m1.loc[term, "se"], m1.loc[term, "p"], "#1f77b4", "s", -OFF),
         ]:
-            ax.plot([est - 1.96 * se, est + 1.96 * se], [y, y], color=col, lw=0.7,
-                    alpha=0.5, zorder=2)
-            ax.plot(est, y, mk, ms=3.8, color=col, mfc=col if pv < 0.05 else "white",
+            ax.plot([est - 1.96 * se, est + 1.96 * se], [y + dy, y + dy], color=col,
+                    lw=0.8, alpha=0.55, zorder=2)
+            ax.plot(est, y + dy, mk, ms=3.6, color=col, mfc=col if pv < 0.05 else "white",
                     mew=0.85, zorder=3)
     ax.axvline(0, color="0.3", lw=0.7, ls="--", zorder=0)
     ax.set_yticks(range(len(order)))
     ax.set_yticklabels([L[t] for t in reversed(order)])
-    ax.set_ylim(-0.6, len(order) - 0.4)
+    ax.set_ylim(-0.65, len(order) - 0.35)
     ax.set_xlabel("Effect on inflow decline (pp)")
     handles = [
-        Line2D([], [], marker="o", ls="", color="#7f7f7f", ms=3.8, label="without $s(x,y)$"),
-        Line2D([], [], marker="s", ls="", color="#1f77b4", ms=3.8, label="with $s(x,y)$"),
-        Line2D([], [], marker="o", ls="", color="0.3", ms=3.8, mfc="white", label="P ≥ 0.05"),
+        Line2D([], [], marker="o", ls="", color="#7f7f7f", ms=3.6, label="without $s(x,y)$"),
+        Line2D([], [], marker="s", ls="", color="#1f77b4", ms=3.6, label="with $s(x,y)$"),
+        Line2D([], [], marker="o", ls="", color="0.3", ms=3.6, mfc="white", label="P ≥ 0.05"),
     ]
-    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.30),
-              frameon=False, handlelength=0.9, ncol=1, labelspacing=0.35)
-    fig.tight_layout()
-    save(fig, "figureBC2c_gam_collapse")
+    leg = ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.22),
+                    frameon=False, handlelength=0.9, ncol=1, labelspacing=0.3)
+    # no tight_layout: it re-fits the axes to the canvas and then clips the outside legend and the
+    # x-label. bbox_inches="tight" plus an explicit extra artist is what actually keeps both.
+    fig.savefig(OUT / "figureBC2c_gam_collapse.pdf", bbox_inches="tight",
+                bbox_extra_artists=[leg])
+    fig.savefig(OUT / "figureBC2c_gam_collapse.png", dpi=450, bbox_inches="tight",
+                bbox_extra_artists=[leg])
+    plt.close(fig)
+    log.info("saved figureBC2c_gam_collapse")
 
 
 if __name__ == "__main__":
@@ -352,7 +369,11 @@ if __name__ == "__main__":
     forest()
     # free column to the RIGHT OF BOTH map rows (they are height-constrained, see PANEL_H note)
     gap = ROW_W - 3 * PANEL_H * max(ASPECT.values())
-    gam_w = min(gap - 0.15, 2.6)
-    log.info("free column right of the map block = %.2f in -> GAM at %.2f in wide", gap, gam_w)
-    gam_collapse(gam_w, 2.8)
+    # figsize sets the AXES box; bbox_inches="tight" then adds the y-label column and the legend,
+    # which measured ~0.45 in here. Request that much under the gap so the saved file fits it.
+    BBOX_OVERHEAD = 0.55
+    gam_w = gap - BBOX_OVERHEAD - 0.20
+    log.info("free column right of the map block = %.2f in -> GAM axes %.2f in "
+             "(expect ~%.2f in saved)", gap, gam_w, gam_w + BBOX_OVERHEAD)
+    gam_collapse(gam_w, 3.1)
     log.info("done -> %s", OUT.relative_to(ROOT))
