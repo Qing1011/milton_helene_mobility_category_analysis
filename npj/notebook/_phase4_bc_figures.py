@@ -112,6 +112,60 @@ def load_local_recovery() -> pd.DataFrame:
     return pd.concat(recs, ignore_index=True)
 
 
+# ======================================================================================
+# Fig 1 recovery bars — horizontal, sized to sit beside the 02 heatmap panels
+# ======================================================================================
+#: Category order and panel geometry are taken from `02_regional_heatmap.ipynb` so the bar rows
+#: line up with the heatmap rows when the two are placed side by side.
+HEATMAP_CATEGORIES = ["Travel", "Work & Professional", "Health", "Education",
+                      "Retail & Leisure", "Urban Government"]
+HEATMAP_FIG_H = 1.8   #: heatmap panels are plt.subplots(figsize=(3.5, 1.8)), default margins
+#: Shared across BOTH recovery panels on purpose. Drawn on separate scales (within 0-6, inflow
+#: 0-15, as in the old regional_recovery.png) the 2x inflow difference is recoverable only by
+#: reading axis numbers; on one scale the within bars are visibly short and Helene's inflow bars
+#: run to the right edge.
+RECOVERY_XMAX = 15.0   #: 15 not 14 so the 13.3 value label clears the right spine
+
+
+def recovery_bars(reg: pd.DataFrame, flow: str) -> None:
+    """Horizontal grouped recovery bars for one flow, row-aligned to the heatmap panels.
+
+    No y tick labels: the category labels are supplied by the heatmap immediately to the left.
+    Figure height and margins match the heatmap construction exactly, so six rows occupy the same
+    vertical span and the pitch matches without rescaling in Illustrator.
+    """
+    d = reg[reg.flow_type == flow]
+    piv = d.pivot_table(index="category", columns="hurricane", values="recovery_days")
+    piv = piv.reindex(HEATMAP_CATEGORIES)          # Travel at top, matching the heatmap
+
+    # same construction as the heatmap panels (no tight_layout) so the axes box matches
+    fig, ax = plt.subplots(figsize=(2.6, HEATMAP_FIG_H))
+    n = len(HEATMAP_CATEGORIES)
+    h, off = 0.36, 0.19
+    for storm, dy in (("helene", +off), ("milton", -off)):
+        ys = [n - 1 - i + dy for i in range(n)]
+        vals = [piv.loc[c, storm] for c in HEATMAP_CATEGORIES]
+        ax.barh(ys, vals, height=h, color=HURR_COLOR[storm], label=storm.title(), zorder=2)
+        for y, v in zip(ys, vals):
+            ax.text(v + 0.25, y, f"{v:.1f}", va="center", ha="left", fontsize=5.8, zorder=3)
+
+    ax.set_yticks(range(n))
+    ax.set_yticklabels([])                          # labels come from the heatmap alongside
+    ax.tick_params(axis="y", length=2)
+    ax.set_ylim(-0.6, n - 0.4)
+    ax.set_xlim(0, RECOVERY_XMAX)
+    ax.set_xlabel("Recovery time (days from landfall)")
+    ax.set_title(f"{FLOW_STYLE[flow][2]} recovery", loc="left", fontsize=8, pad=3)
+    ax.grid(axis="x", ls=":", lw=0.4, alpha=0.6, zorder=0)
+    # Legend only on the within panel: its bars top out at 6.1 d on a 0-15 axis, so the right half
+    # is empty. On the inflow panel the 11-13 d bars run under any in-axes legend.
+    if flow == "within":
+        ax.legend(frameon=False, loc="lower right", handlelength=0.9, labelspacing=0.25)
+    save(fig, f"figureBC1_recovery_bar_{flow}")
+    log.info("  %s: axes height %.3f in over %d rows (pitch %.3f in)",
+             flow, HEATMAP_FIG_H * 0.77, n, HEATMAP_FIG_H * 0.77 / n)
+
+
 def _paired_rows(ax, piv, cats, flows, value_of) -> None:
     """Draw one grey connector per (category, flow) with a storm-coloured marker at each end.
 
@@ -220,6 +274,9 @@ def figure_si_local_recovery(rec: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     reg = load_regional()
+    # Fig 1 = 02 heatmap panels (existing) + these two horizontal recovery bar panels
+    for _flow in ("within", "inflow"):
+        recovery_bars(reg, _flow)
     figure1_regional(reg)
     rec = load_local_recovery()
     log.info("local recovery units: %s", rec.groupby(["storm", "flow"]).size().to_dict())
