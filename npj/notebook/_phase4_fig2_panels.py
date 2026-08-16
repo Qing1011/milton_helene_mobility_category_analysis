@@ -88,7 +88,11 @@ PANEL_H = 2.0
 #: invisible, but it takes the Helene export from ~90 MB of raw TIGER vertices to a few MB —
 #: unsimplified county geometry is what makes the PDF unusable in Illustrator.
 SIMPLIFY_M = 500.0
-HURR_COLOR = {"helene": "#1f77b4", "milton": "#d62728"}
+#: PURPLE/GREEN, not blue/red — must match `_phase4_bc_figures.py`. The choropleths on this very
+#: figure use a RdBu scale where blue is a surge and red a drop, so coding the storms blue and red
+#: made one colour pair carry two unrelated meanings within a single display. Storm identity is
+#: arbitrary; red-drop/blue-surge is not, so the storms move. PRGn is colourblind-safe.
+HURR_COLOR = {"helene": "#762a83", "milton": "#1b7837"}
 
 
 def save(fig, stem: str) -> None:

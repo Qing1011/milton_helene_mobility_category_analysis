@@ -16,12 +16,17 @@ histograms now sit in SI as the justification for that exclusion.
 
 Figures built here
 ------------------
-- `figureBC1_regional_category` — **Fig 1**. (a) flow change per category, three flows, both
-  storms; (b) recovery per category, within and inflow (outflow surges rather than drops, so it
-  has no recovery time). Milton takes the deeper shock in (a); Helene stays disrupted far longer
-  on inflow in (b) — sharper-but-shorter against milder-but-protracted, in one display.
+- `figureBC1_recovery_bar_{within,inflow}` — the right-hand half of **Fig 1**. Horizontal grouped
+  recovery bars, row-aligned to the day x category heatmap panels from `02_regional_heatmap.ipynb`
+  that form the left-hand half. The bars carry no y tick labels; the heatmap alongside supplies
+  the category names.
 - `figureSI_local_recovery` — SI. Unit-level recovery distributions, the evidence that local
   recovery is too tightly concentrated to serve as a regression outcome.
+
+Fig 1 covers **within and inflow only**. Outflow surges rather than drops, so it has no recovery
+time, and including its heatmap row would leave a panel with no bar beside it; the Fig 2 maps
+carry outflow instead. An earlier `figureBC1_regional_category` (paired-dot form) is superseded by
+this heatmap + bars layout and has been removed.
 
 Not built here
 --------------
@@ -68,17 +73,20 @@ mpl.rcParams.update({
 #: Nature widths are 88 mm (single) or 180 mm (double).
 FIG_W = 7.09
 
-HURR_COLOR = {"helene": "#1f77b4", "milton": "#d62728"}
+#: Storm colours are PURPLE/GREEN, not blue/red. The heatmaps (02) and flow maps (05) use a RdBu
+#: diverging scale where blue means increase and red means decrease; colouring the storms blue and
+#: red as well made the same two colours carry two unrelated meanings in one display. Storm
+#: identity is arbitrary whereas red-decrease/blue-increase is semantically load-bearing, so the
+#: storms move. PRGn endpoints are colourblind-safe and maximally distinct from RdBu.
+HURR_COLOR = {"helene": "#762a83", "milton": "#1b7837"}
 HURR_DIR = {"helene": "helene_100mi", "milton": "milton_100mi"}
 VOL_FLOOR = 20_000.0
 UTILITIES = "Utilities"
 
 #: flow -> (marker, y-offset, display label). Within/inflow are drops, outflow is a surge.
-FLOW_STYLE = {
-    "within": ("o", +0.25, "Within-area"),
-    "inflow": ("s", 0.00, "Inflow"),
-    "outflow": ("^", -0.25, "Outflow"),
-}
+#: Outflow is excluded from Fig 1 entirely: it surges rather than drops, so it has no recovery
+#: time and would leave a heatmap row with no bar panel beside it. The Fig 2 maps carry it.
+FLOW_LABEL = {"within": "Within-area", "inflow": "Inflow"}
 
 
 def save(fig, stem: str) -> None:
@@ -155,7 +163,7 @@ def recovery_bars(reg: pd.DataFrame, flow: str) -> None:
     ax.set_ylim(-0.6, n - 0.4)
     ax.set_xlim(0, RECOVERY_XMAX)
     ax.set_xlabel("Recovery time (days from landfall)")
-    ax.set_title(f"{FLOW_STYLE[flow][2]} recovery", loc="left", fontsize=8, pad=3)
+    ax.set_title(f"{FLOW_LABEL[flow]} recovery", loc="left", fontsize=8, pad=3)
     ax.grid(axis="x", ls=":", lw=0.4, alpha=0.6, zorder=0)
     # Legend only on the within panel: its bars top out at 6.1 d on a 0-15 axis, so the right half
     # is empty. On the inflow panel the 11-13 d bars run under any in-axes legend.
@@ -164,75 +172,6 @@ def recovery_bars(reg: pd.DataFrame, flow: str) -> None:
     save(fig, f"figureBC1_recovery_bar_{flow}")
     log.info("  %s: axes height %.3f in over %d rows (pitch %.3f in)",
              flow, HEATMAP_FIG_H * 0.77, n, HEATMAP_FIG_H * 0.77 / n)
-
-
-def _paired_rows(ax, piv, cats, flows, value_of) -> None:
-    """Draw one grey connector per (category, flow) with a storm-coloured marker at each end.
-
-    The connector length *is* the between-storm gap for that cell, so the reader compares gaps by
-    length rather than by reading two axis positions.
-    """
-    for i, cat in enumerate(cats):
-        y = len(cats) - 1 - i
-        for flow in flows:
-            mk, off, _ = FLOW_STYLE[flow]
-            h, m = value_of(piv, cat, flow, "helene"), value_of(piv, cat, flow, "milton")
-            if np.isnan(h) or np.isnan(m):
-                continue
-            ax.plot([h, m], [y + off, y + off], color="0.55", lw=0.9, zorder=1,
-                    solid_capstyle="round")
-            for val, storm in ((h, "helene"), (m, "milton")):
-                ax.plot(val, y + off, mk, ms=4.2, color=HURR_COLOR[storm],
-                        mec="white", mew=0.6, zorder=3)
-
-
-# ======================================================================================
-# Figure 1 — regional, by activity category
-# ======================================================================================
-def figure1_regional(reg: pd.DataFrame) -> None:
-    """(a) flow change per category; (b) recovery per category. Both storms, six categories."""
-    # magnitude: drops for within/inflow, surge for outflow — one signed axis, zero marked
-    mag = reg.copy()
-    mag["value"] = np.where(mag.flow_type == "outflow",
-                            mag.largest_increase, mag.largest_drop)
-    piv_mag = mag.pivot_table(index="category", columns=["flow_type", "hurricane"], values="value")
-    piv_rec = reg.pivot_table(index="category", columns=["flow_type", "hurricane"],
-                              values="recovery_days")
-
-    # order by Helene inflow recovery: the series that separates, so (b) reads as a gradient
-    cats = piv_rec[("inflow", "helene")].sort_values().index.tolist()
-
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(FIG_W, 2.75), sharey=True)
-
-    _paired_rows(ax_a, piv_mag, cats, ("within", "inflow", "outflow"),
-                 lambda p, c, f, h: p.loc[c, (f, h)])
-    ax_a.axvline(0, color="0.3", lw=0.7, ls="--", zorder=0)
-    ax_a.set_xlabel("Change from baseline (%)")
-    ax_a.set_title("Flow change", pad=4)
-
-    # outflow surges rather than drops, so it has no recovery time — within and inflow only
-    _paired_rows(ax_b, piv_rec, cats, ("within", "inflow"),
-                 lambda p, c, f, h: p.loc[c, (f, h)])
-    ax_b.set_xlabel("Days from landfall to baseline")
-    ax_b.set_title("Recovery time", pad=4)
-    ax_b.set_xlim(0, None)
-
-    for ax, letter in ((ax_a, "a"), (ax_b, "b")):
-        ax.set_yticks(range(len(cats)))
-        ax.set_ylim(-0.6, len(cats) - 0.4)
-        ax.grid(axis="x", ls=":", lw=0.4, alpha=0.6, zorder=0)
-        ax.text(-0.02, 1.12, letter, transform=ax.transAxes, va="top", ha="right",
-                fontweight="bold", fontsize=9)
-    ax_a.set_yticklabels(list(reversed(cats)))
-
-    handles = [plt.Line2D([], [], marker=FLOW_STYLE[f][0], ls="", color="#555", ms=4.2,
-                          label=FLOW_STYLE[f][2]) for f in ("within", "inflow", "outflow")]
-    handles += [plt.Line2D([], [], marker="o", ls="", color=HURR_COLOR[s], ms=4.2,
-                           label=s.title()) for s in ("helene", "milton")]
-    fig.legend(handles=handles, loc="lower center", ncol=5, frameon=False,
-               bbox_to_anchor=(0.5, -0.10), handlelength=1.0, columnspacing=1.4)
-    fig.tight_layout(w_pad=1.0)
-    save(fig, "figureBC1_regional_category")
 
 
 # ======================================================================================
@@ -277,7 +216,6 @@ if __name__ == "__main__":
     # Fig 1 = 02 heatmap panels (existing) + these two horizontal recovery bar panels
     for _flow in ("within", "inflow"):
         recovery_bars(reg, _flow)
-    figure1_regional(reg)
     rec = load_local_recovery()
     log.info("local recovery units: %s", rec.groupby(["storm", "flow"]).size().to_dict())
     figure_si_local_recovery(rec)
