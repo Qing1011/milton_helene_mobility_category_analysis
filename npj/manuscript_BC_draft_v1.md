@@ -37,21 +37,21 @@ examine local spatial structure. Here we decompose mobility into within-area, in
 across six activity categories and two spatial scales, and show that the rural–urban recovery gap lies almost
 entirely in external reconnection rather than in local restart.
 
-**¶2.** Milton delivered the deeper shock. Across local units, within-area mobility fell by a median of 27%
-(interquartile range 20–33%, *n* = 33 counties) under Milton against 15% (IQR 11–17%, *n* = 96 clusters)
-under Helene (Mann–Whitney *p* < 0.001), and inflow fell by 33% (IQR 24–42%, *n* = 28) against 20%
-(IQR 13–29%, *n* = 52; *p* < 0.001). Regional aggregates agree: within-area declines spanned 24–45% across
-the six activity categories under Milton and 8–13% under Helene. Outflow was indistinguishable between
-storms (median surge 18%, IQR −3 to 55%, *n* = 29 versus 19%, IQR 5–31%, *n* = 74; *p* = 0.991), although
-Milton's was far more dispersed, its evacuation concentrated in specific coastal counties rather than lifting
-the whole region. Recovery, however, does not follow shock depth. Figure 1a plots the distribution of
-within-area recovery time — days from landfall until mobility returns to its counterfactual baseline — across
-every local unit in each storm, and Figure 1b plots the same for inflow on a common axis. The two within-area
-distributions are statistically indistinguishable (median 4.4 days, IQR 3.7–5.1, *n* = 96 for Helene;
-4.5 days, IQR 4.1–5.4, *n* = 33 for Milton; *p* = 0.294), despite Milton's shock being nearly twice as deep.
-Inflow separates cleanly: Helene's units took 11.1 days (IQR 8.7–13.4, *n* = 46) against Milton's 5.1 days
-(IQR 4.2–6.2, *n* = 28; *p* < 0.001). The same ordering holds regionally and in all six categories, where
-inflow recovery spanned 11.3–13.3 days under Helene and 4.4–5.5 days under Milton. Local activity therefore
+**¶2.** Milton delivered the deeper shock, and every activity category agrees. Figure 1a,b and 1d,e show
+daily deviation from the counterfactual baseline for each of six categories, from one week before landfall to
+two weeks after. Within-area mobility fell by 24–45% across categories under Milton against 8–13% under
+Helene — between two and four times deeper in every category — and inflow fell by 27–60% against 20–27%. The
+two shocks also differ in shape, not only in depth: Milton's within-area decline is a narrow, intense band
+(Fig. 1b), whereas Helene's inflow deficit is shallower but far broader (Fig. 1d), persisting well beyond the
+landfall week. Recovery does not follow shock depth. Figure 1c and 1f give the time from landfall until each
+category returns to baseline. Within-area recovery is indistinguishable between the storms — 3.2–5.1 days
+under Helene against 4.7–6.1 days under Milton — and in five of six categories Helene is the *faster* of the
+two, despite absorbing the shallower shock. Inflow separates cleanly and in the same direction in all six
+categories: 11.3–13.3 days under Helene against 4.4–5.5 days under Milton, a gap of 6.5–8.3 days per
+category. The pattern repeats at the local scale, where per-unit within-area recovery is statistically
+indistinguishable between storms (median 4.4 days, interquartile range 3.7–5.1, *n* = 96 clusters for Helene;
+4.5 days, IQR 4.1–5.4, *n* = 33 counties for Milton; Mann–Whitney *P* = 0.294) while inflow recovery differs
+more than twofold (11.1 against 5.1 days; *P* < 0.001; Supplementary Fig. 1). Local activity therefore
 restarts on a similar clock regardless of urbanicity or shock depth, while the time a region spends cut off
 from outside traffic differs more than twofold. Because within-area flow counts trips beginning and ending
 inside the same unit whereas inflow counts arrivals from outside the affected region, this contrast localizes
@@ -191,12 +191,22 @@ survives adjustment for smooth large-scale geography.
 
 ## Figures
 
-**Fig. 1 | The rural–urban recovery gap is in reconnection, not restart.**
-**a**, Distribution of within-area recovery time (days from landfall to return to counterfactual baseline)
-across local units — Helene clusters (blue, *n* = 96) and Milton counties (red, *n* = 33). The distributions
-overlap (medians 4.4 vs 4.5 days, *p* = 0.294). **b**, The same for inflow, on a common axis (Helene *n* = 46,
-Milton *n* = 28), showing clean separation (medians 11.1 vs 5.1 days, *p* < 0.001). Dashed lines mark
-per-storm medians. Units are restricted to those with baseline mean volume ≥ 20,000 visits/day.
+**Fig. 1 | The rural–urban gap is in reconnection, not restart.** Regional mobility by activity category.
+**a**,**b**, Daily within-area deviation from the counterfactual baseline for Helene (**a**) and Milton
+(**b**), six activity categories × 22 days (landfall −7 to +14); red denotes decline, blue increase, on a
+scale shared between storms. **c**, Within-area recovery time — days from landfall until each category
+returns to baseline — Helene (purple) against Milton (green). **d**,**e**,**f**, The same three panels for
+inflow. Recovery axes in **c** and **f** share a 0–15 day scale, so bar length is comparable between flows.
+Milton's shock is two to four times deeper (**b** vs **a**), yet only inflow recovery separates the storms
+(**f**); within-area recovery does not (**c**). Outflow is a surge rather than a decline and therefore has no
+recovery time; it appears in Fig. 2. Storm colours are deliberately purple/green so that red and blue are
+reserved for the direction of change.
+
+**Supplementary Fig. 1 | Local recovery has little variance to model.** Per-unit recovery-time distributions
+for within-area (**a**) and inflow (**b**) flows, Helene clusters against Milton counties, on a common
+0–25 day axis; units restricted to baseline mean volume ≥ 20,000 visits/day. Within-area distributions
+overlap (*P* = 0.294) with an interquartile range of about 1.4 days, which is why recovery is reported
+descriptively by category rather than used as a regression outcome.
 
 **Fig. 2 | Exposure, not socioeconomic composition, structures the spatial pattern.**
 **a**, Largest inflow decline per local unit for both storms. **b**, Posterior means and 95% HDI from
