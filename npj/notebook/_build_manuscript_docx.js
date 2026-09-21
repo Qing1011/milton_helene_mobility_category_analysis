@@ -1,4 +1,20 @@
 /**
+ * ⚠️  DO NOT RUN THIS AGAINST npj/Helene_Milton_BC_NatureCities_v1.docx  ⚠️
+ *
+ * That document has been HAND-EDITED since this script generated it (2026-08-17): the working
+ * copy is 1.4 MB with two embedded figures and ~90 words more than this script produces, against
+ * the 17 KB text-only file committed in 6125105. Re-running would overwrite those edits and drop
+ * the figures. Generate to a NEW path if you need a fresh build, then merge by hand.
+ *
+ * Kept because it records the exact text of the v1 draft and is the place to fix wording before
+ * any future regeneration. The Methods text here has been trimmed to 495 words; the .docx still
+ * carries the untrimmed 525-word version, which is OVER the Nature Cities 500-word limit.
+ *
+ * Requires the `docx` npm package, which is not installed in this repo (it lived in a
+ * session scratchpad that has since been cleaned): npm install docx, then run with NODE_PATH set.
+ */
+
+/**
  * Build the Nature Cities Brief Communication as a submission-format .docx.
  *
  * Source of truth is npj/manuscript_BC_draft_v1.md; this script encodes the same text with
@@ -168,8 +184,7 @@ const METHODS = [
    "Appalachian counties; at 50 miles that region is excluded and exposure gradients invert."],
   ["Mobility data.",
    "Daily origin–destination visit counts derive from device-based foot-traffic records (Advan Research " +
-   "Weekly Patterns, distributed via Dewey Data^{17}) [VERIFY provider + terms]. Point-of-interest " +
-   "categories were aggregated into six activity groups: Travel, Work & Professional, Health, Education, " +
+   "Weekly Patterns, distributed via Dewey Data^{17}) [VERIFY provider + terms]. Categories were aggregated into six activity groups: Travel, Work & Professional, Health, Education, " +
    "Retail & Leisure, and Urban Government. For each unit we form three daily flows: within-area W(t) " +
    "(origin and destination both inside the unit), inflow I(t) (origin outside the affected region, " +
    "destination inside the unit), and outflow O(t) (the reverse)."],
@@ -177,11 +192,11 @@ const METHODS = [
    "Helene's 487 counties were merged into 101 clusters by joining contiguous counties sharing a " +
    "National Center for Health Statistics (NCHS) urban–rural code [CITATION NEEDED], because per-county " +
    "baselines are unstable for its many small rural units. Milton's 34 counties have stable per-county " +
-   "baselines and were left unaggregated — an asymmetry driven by baseline stability, not convenience."],
+   "baselines and were left unaggregated."],
   ["Counterfactual baseline.",
    "For each unit and flow, daily volume M(t) was modelled as a calendar regression with AR(1) errors on " +
    "the log scale: log(1 + M(t)) = c + Σ β(d)·DOW + Σ γ(m)·MON + δ·YEAR2024 + η(t), with " +
-   "η(t) = φ·η(t−1) + ε(t). It was fitted by state-space maximum likelihood on 2023 July–October plus " +
+   "η(t) = φ·η(t−1) + ε(t). Fitted by state-space maximum likelihood on 2023 July–October plus " +
    "2024 July through seven days before landfall, so no storm-affected day enters the fit. Calendar " +
    "dummies rather than a stochastic seasonal term were used because mobility seasonality is " +
    "deterministic, which is more stable for small units. Predictions back-transform as " +
@@ -191,8 +206,8 @@ const METHODS = [
    "maximum over [t(L)−3, t(L)+6], the window covering evacuation lead time. Recovery time is " +
    "τ = (t(trough) − t(L)) + (−a/b), where a and b are the intercept and slope of a Theil–Sen robust " +
    "line^{18,19} fitted to the monotonic recovery segment of the 3-day-smoothed rd(t), and t(trough) is " +
-   "its minimum within 10 days of landfall. Theil–Sen resists outliers in the noisy post-trough window; " +
-   "the 10-day window avoids left-censoring the trough of severely disrupted on-track units."],
+   "its minimum within 10 days of landfall. Theil–Sen resists post-trough outliers; " +
+   "the 10-day window avoids left-censoring severely disrupted units."],
   ["Sample restriction.",
    "Per flow, units with baseline-window mean volume below 20,000 visits/day were excluded, removing a " +
    "noisy low-volume tail (retained, within/inflow/outflow: Helene 96/52/74, Milton 33/28/29)."],
@@ -204,8 +219,7 @@ const METHODS = [
    "imposes common slopes across two events that differ on multiple axes; a pooled specification is " +
    "reported in Supplementary Information. Residual spatial autocorrelation was assessed by Moran's I " +
    "under Queen contiguity^{21}, and spatial confounding by refitting in a generalized additive " +
-   "framework with a penalized thin-plate smooth s(x,y) [CITATION NEEDED: Wood, mgcv], which tests " +
-   "whether an association survives adjustment for smooth large-scale geography."],
+   "framework with a penalized thin-plate smooth s(x,y) [CITATION NEEDED: Wood, mgcv]."],
 ];
 
 const CAPTIONS = [
